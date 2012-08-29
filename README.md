@@ -24,7 +24,7 @@ Besides polling a channel, it is also possible for processes to subscribe to
 a channel and receive any new message sent to it as soon as the message
 arrives:
 
-    tinymq:pull("some-channel", now, self()),
+    tinymq:subscribe("some-channel", now, self()),
     receive
         {_From, Timestamp, Messages} ->
             io:format("Received messages: ~p~n", [Messages])

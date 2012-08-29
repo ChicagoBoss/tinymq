@@ -24,19 +24,19 @@ init(Options) ->
 handle_call(_From, _, State) ->
     {noreply, State}.
 
-handle_cast({From, pull, 'now', Subscriber}, State) ->
+handle_cast({From, subscribe, 'now', Subscriber}, State) ->
     NewSubscribers = [{erlang:monitor(process, Subscriber), Subscriber}|State#state.subscribers],
     gen_server:reply(From, {ok, now_to_micro_seconds(erlang:now())}),
     {noreply, State#state{subscribers = NewSubscribers}};
-handle_cast({From, pull, 'last', Subscriber}, State) ->
+handle_cast({From, subscribe, 'last', Subscriber}, State) ->
     {NewSubscribers, LastPull} = pull_messages(State#state.last_pull, Subscriber, State),
     gen_server:reply(From, {ok, LastPull}),
     {noreply, State#state{subscribers = NewSubscribers, last_pull = LastPull}};
-handle_cast({From, pull, undefined, Subscriber}, State) ->
+handle_cast({From, subscribe, undefined, Subscriber}, State) ->
     {NewSubscribers, LastPull} = pull_messages(undefined, Subscriber, State),
     gen_server:reply(From, {ok, LastPull}),
     {noreply, State#state{subscribers = NewSubscribers, last_pull = LastPull}};
-handle_cast({From, pull, Timestamp, Subscriber}, State) when is_integer(Timestamp) ->
+handle_cast({From, subscribe, Timestamp, Subscriber}, State) when is_integer(Timestamp) ->
     {NewSubscribers, LastPull} = pull_messages(Timestamp, Subscriber, State),
     gen_server:reply(From, {ok, LastPull}),
     {noreply, State#state{subscribers = NewSubscribers, last_pull = LastPull}};

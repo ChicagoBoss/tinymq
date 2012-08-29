@@ -18,9 +18,9 @@ init(Options) ->
     MaxAgeSeconds = proplists:get_value(max_age, Options, 60),
     {ok, #state{dict = dict:new(), max_age = MaxAgeSeconds}}.
 
-handle_call({pull, Channel, Timestamp, Subscriber}, From, State) ->
+handle_call({subscribe, Channel, Timestamp, Subscriber}, From, State) ->
     {ChannelPid, NewState} = find_or_create_channel(Channel, State),
-    gen_server:cast(ChannelPid, {From, pull, Timestamp, Subscriber}),
+    gen_server:cast(ChannelPid, {From, subscribe, Timestamp, Subscriber}),
     {noreply, NewState};
 
 handle_call({poll, Channel, Timestamp}, From, State) ->

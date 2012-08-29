@@ -1,14 +1,14 @@
 -module(tinymq).
 
--export([now/1, poll/2, pull/3, push/2]).
+-export([now/1, poll/2, pull/2, subscribe/3, push/2]).
 
-%% @spec pull(Channel::string(), Timestamp::integer() | now | last, Subscriber::pid()) -> {ok, PullTime} | {error, Reason}
+%% @spec subscribe(Channel::string(), Timestamp::integer() | now | last, Subscriber::pid()) -> {ok, SubscribeTime} | {error, Reason}
 %% @doc Check `Channel' for messages created since `Timestamp' and send
 %% the result to `Subscriber' (see poll/2 for the result format). If no
-%% messages are in the queue, the channel % does not respond until a message
+%% messages are in the queue, the channel does not respond until a message
 %% arrives.
-pull(Channel, Timestamp, Subscriber) ->
-    gen_server:call(tinymq, {pull, Channel, Timestamp, Subscriber}).
+subscribe(Channel, Timestamp, Subscriber) ->
+    gen_server:call(tinymq, {subscribe, Channel, Timestamp, Subscriber}).
 
 %% @spec poll(Channel::string(), Timestamp::integer() | now | last) -> {ok, NewTimestamp, [Message]} | {error, Reason}
 %% @doc Check `Channel' for messages created since `Timestamp', returning
