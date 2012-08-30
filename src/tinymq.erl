@@ -1,6 +1,6 @@
 -module(tinymq).
 
--export([now/1, poll/2, pull/2, subscribe/3, push/2]).
+-export([now/1, poll/2, subscribe/3, push/2]).
 
 %% @spec subscribe(Channel::string(), Timestamp::integer() | now | last, Subscriber::pid()) -> {ok, SubscribeTime} | {error, Reason}
 %% @doc Check `Channel' for messages created since `Timestamp' and send
