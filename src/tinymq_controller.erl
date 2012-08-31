@@ -2,20 +2,17 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, start_link/1]).
+-export([start_link/0]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -record(state, {dict, max_age}).
 
 start_link() ->
-    start_link([]).
+    gen_server:start_link({local, tinymq}, ?MODULE, [], []).
 
-start_link(Args) ->
-    gen_server:start_link({local, tinymq}, ?MODULE, Args, []).
-
-init(Options) ->
-    MaxAgeSeconds = proplists:get_value(max_age, Options, 60),
+init([]) ->
+    {ok, MaxAgeSeconds} = application:get_env(max_age),
     {ok, #state{dict = dict:new(), max_age = MaxAgeSeconds}}.
 
 handle_call({subscribe, Channel, Timestamp, Subscriber}, From, State) ->
@@ -67,8 +64,7 @@ find_or_create_channel(Channel, #state{dict = Chan2Pid, max_age = MaxAge} = Stat
             {Pid, State};
         _ ->
             {ok, ChannelSup} = tinymq_channel_sup:start_link(),
-            {ok, ChannelPid} = tinymq_channel_sup:start_child(ChannelSup, 
-                [{max_age, MaxAge}, {supervisor, ChannelSup}, {channel, Channel}]),
+            {ok, ChannelPid} = supervisor:start_child(ChannelSup, [MaxAge, ChannelSup, Channel]),
             {ChannelPid, State#state{
                     dict = dict:store(Channel, ChannelPid, Chan2Pid)
                 }}
