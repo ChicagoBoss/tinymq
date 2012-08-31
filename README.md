@@ -43,3 +43,18 @@ Each channel can have an unlimited number of subscribers. Subscribers are
 removed from the channel as soon as the first message is delivered, so
 to keep a subscription active you need to keep re-subscribing using the
 returned Timestamp as the input to the next call.
+
+Limitations
+==
+
+Internally, messages are stored in a list. This is not terribly efficient.
+As a result, push/2 is O(N + K) where N is the number of non-expired messages
+and K is the number of subscribers. Other operations are either constant-time
+or proportional to the number of returned messages.
+
+If a channel does not receive any new messages, but continues receiving other
+requests, the old messages may linger in memory indefinitely. Old messages are
+purged with every "push" operation on a channel, but not with other operations.
+Note that the channel itself is eliminated if max_age passes without any
+channel activity, so this should only be a concern if there are "polls" and
+"subscribes" on a channel without any new "pushes".
