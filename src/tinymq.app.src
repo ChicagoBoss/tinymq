@@ -8,5 +8,6 @@
         kernel,
         stdlib
             ]},
-    {env, []}
+    {env, [{max_age, 60}]},
+    {mod, {tinymq_app, []}}
     ]}.

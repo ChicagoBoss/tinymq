@@ -2,7 +2,7 @@
 
 -behaviour(supervisor).
 
--export([start_link/0, start_link/1, start_child/2, init/1]).
+-export([start_link/0, start_link/1, init/1]).
 
 start_link() ->
     supervisor:start_link(?MODULE, []).
@@ -10,13 +10,9 @@ start_link() ->
 start_link(StartArgs) ->
     supervisor:start_link(?MODULE, StartArgs).
 
-start_child(Supervisor, StartArgs) ->
-    supervisor:start_child(Supervisor,
-        {mq_channel_controller, {tinymq_channel_controller, start_link, [StartArgs]},
-            permanent,
-            2000,
-            worker,
-            [tinymq_channel_controller]}).
-
 init(_StartArgs) ->
-    {ok, {{one_for_one, 10, 10}, []}}.
+    {ok, {{simple_one_for_one, 10, 10},
+          [
+           {mq_channel_controller, {tinymq_channel_controller, start_link, []},
+            permanent, 2000, worker, [tinymq_channel_controller]}
+          ]}}.

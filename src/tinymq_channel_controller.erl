@@ -2,24 +2,21 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, start_link/1]).
+-export([start_link/3]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -record(state, {channel, messages = [], subscribers = [], max_age, last_pull, supervisor}).
 
-start_link() ->
-    start_link([]).
+start_link(MaxAge, ChannelSup, Channel) ->
+    gen_server:start_link(?MODULE, [MaxAge, ChannelSup, Channel], []).
 
-start_link(Args) ->
-    gen_server:start_link(?MODULE, Args, []).
-
-init(Options) ->
-    MaxAgeSeconds = proplists:get_value(max_age, Options, 60),
-    Supervisor = proplists:get_value(supervisor, Options),
-    Channel = proplists:get_value(channel, Options),
-    {ok, #state{max_age = MaxAgeSeconds, supervisor = Supervisor, channel = Channel, last_pull = erlang:now()}, 
-        MaxAgeSeconds * 1000}.
+init([MaxAge, ChannelSup, Channel]) ->
+    {ok, #state{max_age = MaxAge,
+                supervisor = ChannelSup,
+                channel = Channel,
+                last_pull = erlang:now()},
+     MaxAge * 1000}.
 
 handle_call(_From, _, State) ->
     {noreply, State}.

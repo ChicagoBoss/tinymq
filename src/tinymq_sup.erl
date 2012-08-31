@@ -2,19 +2,16 @@
 
 -behaviour(supervisor).
 
--export([start_link/0, start_link/1]).
+-export([start_link/0]).
 
 -export([init/1]).
 
 start_link() ->
     supervisor:start_link(?MODULE, []).
 
-start_link(StartArgs) ->
-    supervisor:start_link(?MODULE, StartArgs).
-
-init(StartArgs) ->
+init([]) ->
     {ok, {{one_for_one, 10, 10}, [
-                {mq_controller, {tinymq_controller, start_link, [StartArgs]},
+                {mq_controller, {tinymq_controller, start_link, []},
                     permanent,
                     2000,
                     worker,
