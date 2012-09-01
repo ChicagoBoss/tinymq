@@ -13,11 +13,13 @@ start_link(MaxAge, ChannelSup, Channel) ->
     gen_server:start_link(?MODULE, [MaxAge, ChannelSup, Channel], []).
 
 init([MaxAge, ChannelSup, Channel]) ->
-    {ok, #state{max_age = MaxAge,
-                supervisor = ChannelSup,
-                channel = Channel,
-                messages = gb_trees:empty(),
-                last_pull = erlang:now()},
+    {ok, #state{
+            max_age = MaxAge,
+            supervisor = ChannelSup,
+            channel = Channel,
+            messages = gb_trees:empty(),
+            last_pull = now_to_micro_seconds(erlang:now()),
+            last_purge = now_to_micro_seconds(erlang:now()) },
      MaxAge * 1000}.
 
 handle_call(_From, _, State) ->
