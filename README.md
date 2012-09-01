@@ -44,17 +44,22 @@ removed from the channel as soon as the first message is delivered, so
 to keep a subscription active you need to keep re-subscribing using the
 returned Timestamp as the input to the next call.
 
-Limitations
+Performance
 ==
 
-Internally, messages are stored in a list. This is not terribly efficient.
-As a result, push/2 is O(N + K) where N is the number of non-expired messages
-and K is the number of subscribers. Other operations are either constant-time
-or proportional to the number of returned messages.
+Internally, messages are stored in a priority queue. Purging old messages
+occurs after any channel activity (but no more than once per second), and has
+an overhead of O(log(M) + E), where M is the total number of messages on a
+channel and E is the number of messages on a channel that expired since the
+last purge. With a better data structure this might be improved to O(log(M)),
+but note that the garbage collector will have to perform O(E) operations anyway,
+so the extra overhead is probably not worth losing sleep over.
 
-If a channel does not receive any new messages, but continues receiving other
-requests, the old messages may linger in memory indefinitely. Old messages are
-purged with every "push" operation on a channel, but not with other operations.
-Note that the channel itself is eliminated if max_age passes without any
-channel activity, so this should only be a concern if there are "polls" and
-"subscribes" on a channel without any new "pushes".
+Channels are destroyed after max_age seconds of inactivity. Because old messages
+are only purged when there is channel activity, some messages may linger in memory
+for up to 2 * max_age seconds (i.e. if the last channel activity occurs \epsilon
+seconds before a message is set to expire).
+
+New messages on a channel are sent to all channel subscribers serially. With proper
+parallelism the running time might be improved to O(S/K), where S is the number
+of subscribers and K is the number of cores. But this will take some work.
