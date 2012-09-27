@@ -26,7 +26,7 @@ handle_call(_From, _, State) ->
     {noreply, State}.
 
 handle_cast({From, subscribe, 'now', Subscriber}, State) ->
-    NewSubscribers = [{erlang:monitor(process, Subscriber), Subscriber}|State#state.subscribers],
+    NewSubscribers = add_subscriber(Subscriber, State#state.subscribers),
     gen_server:reply(From, {ok, now_to_micro_seconds(erlang:now())}),
     {noreply, purge_old_messages(State#state{ subscribers = NewSubscribers })};
 
@@ -114,5 +114,12 @@ pull_messages(Timestamp, Subscriber, State) ->
             Subscriber ! {self(), Now, ReturnMessages},
             {State#state.subscribers, Now};
         _ ->
-            {[{erlang:monitor(process, Subscriber), Subscriber}|State#state.subscribers], Now}
+            {add_subscriber(Subscriber, State#state.subscribers), Now}
     end.
+
+% Checks if the new subscriber pid already has a monitor
+add_subscriber(NewSubscriber, Subscribers) ->
+        case lists:keymember(NewSubscriber, 2, Subscribers) of
+		true -> Subscribers;
+		false -> [{erlang:monitor(process, NewSubscriber), NewSubscriber} | Subscribers]
+	end.
