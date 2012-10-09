@@ -63,8 +63,7 @@ find_or_create_channel(Channel, #state{dict = Chan2Pid, max_age = MaxAge} = Stat
         {ok, Pid} ->
             {Pid, State};
         _ ->
-            {ok, ChannelSup} = tinymq_channel_sup:start_link(),
-            {ok, ChannelPid} = supervisor:start_child(ChannelSup, [MaxAge, ChannelSup, Channel]),
+            {ok, ChannelPid} = supervisor:start_child(tinymq_channel_sup, [MaxAge, tinymq_channel_sup, Channel]),
             {ChannelPid, State#state{
                     dict = dict:store(Channel, ChannelPid, Chan2Pid)
                 }}

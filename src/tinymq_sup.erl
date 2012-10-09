@@ -10,10 +10,12 @@ start_link() ->
     supervisor:start_link(?MODULE, []).
 
 init([]) ->
-    {ok, {{one_for_one, 10, 10}, [
-                {mq_controller, {tinymq_controller, start_link, []},
-                    permanent,
-                    2000,
-                    worker,
-                    [tinymq_controller]}
-            ]}}.
+    MqSup = {mq_controller, {tinymq_controller, start_link, []},
+           permanent, 2000, worker, [tinymq_controller]},
+
+    ChannelSup = {tinymq_channel_sup, {tinymq_channel_sup, start_link, []},
+                  permanent, 2000, supervisor, [tinymq_channel_sup]},
+
+    Children = [MqSup, ChannelSup],
+    RestartStrategy = {one_for_one, 10, 10},
+    {ok, {RestartStrategy, Children}}.
