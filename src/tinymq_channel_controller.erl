@@ -39,7 +39,7 @@ handle_cast({From, subscribe, Timestamp, Subscriber}, State) ->
     {NewSubscribers, LastPull} = pull_messages(ActualTimestamp, Subscriber, State),
     gen_server:reply(From, {ok, LastPull}),
     {noreply, purge_old_messages(State#state{ subscribers = NewSubscribers, 
-                last_pull = LastPull})};
+                last_pull = LastPull}), State#state.max_age * 1000};
 
 handle_cast({From, poll, Timestamp}, State) ->
     ActualTimestamp = case Timestamp of
@@ -50,7 +50,7 @@ handle_cast({From, poll, Timestamp}, State) ->
     ReturnMessages = messages_newer_than_timestamp(ActualTimestamp, State#state.messages),
     Now = now_to_micro_seconds(erlang:now()),
     gen_server:reply(From, {ok, Now, ReturnMessages}),
-    {noreply, purge_old_messages(State#state{ last_pull = Now })};
+    {noreply, purge_old_messages(State#state{ last_pull = Now }), State#state.max_age * 1000};
 
 handle_cast({From, push, Message}, State) ->
     Now = now_to_micro_seconds(erlang:now()),
@@ -62,11 +62,11 @@ handle_cast({From, push, Message}, State) ->
     gen_server:reply(From, {ok, Now}),
     State2 = purge_old_messages(State), 
     NewMessages = tiny_pq:insert_value(Now, Message, State2#state.messages),
-    {noreply, State2#state{messages = NewMessages, subscribers = [], last_pull = LastPull}};
+    {noreply, State2#state{messages = NewMessages, subscribers = [], last_pull = LastPull}, State#state.max_age * 1000};
 
 handle_cast({From, now}, State) ->
     gen_server:reply(From, now_to_micro_seconds(erlang:now())),
-    {noreply, purge_old_messages(State)}.
+    {noreply, purge_old_messages(State), State#state.max_age * 1000}.
 
 terminate(_Reason, _State) ->
     ok.
@@ -76,8 +76,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 handle_info(timeout, State) ->
     gen_server:cast(tinymq, {expire, State#state.channel}),
-    exit(State#state.supervisor),
-    {noreply, State};
+    {stop, normal, State};
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) ->
     {noreply, State#state{ subscribers = proplists:delete(Ref, State#state.subscribers) }};
 handle_info(_Info, State) ->
