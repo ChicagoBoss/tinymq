@@ -1,6 +1,6 @@
 -module(tinymq).
 
--export([now/1, poll/2, subscribe/3, push/2]).
+-export([now/1, poll/2, subscribe/3, push/2,set_global_age/1]).
 
 %% @spec subscribe(Channel::string(), Timestamp::integer() | now | last, Subscriber::pid()) -> {ok, SubscribeTime} | {error, Reason}
 %% @doc Check `Channel' for messages created since `Timestamp' and send
@@ -25,3 +25,10 @@ push(Channel, Message) ->
 %% @doc Retrieve the current time for the server managing `Channel'.
 now(Channel) ->
     gen_server:call(tinymq, {now, Channel}).
+
+%% @spec set_global_age(NewMaxAge) -> ok
+%% @doc Set new maximum age globally
+%% This will change the maximum age of the channel to NewMaxAge.
+%% Note: Channels created prior to this call will not have any effect.
+set_global_age(NewMaxAge) ->
+    gen_server:cast(tinymq, {set_max_age, NewMaxAge}).
