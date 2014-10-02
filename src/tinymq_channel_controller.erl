@@ -6,7 +6,7 @@
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--record(state, {channel, messages = [], subscribers = [], max_age, 
+-record(state, {channel, messages = [], subscribers = [], max_age,
         last_pull, last_purge, supervisor}).
 
 start_link(MaxAge, ChannelSup, Channel) ->
@@ -38,7 +38,7 @@ handle_cast({From, subscribe, Timestamp, Subscriber}, State) ->
     end,
     {NewSubscribers, LastPull} = pull_messages(ActualTimestamp, Subscriber, State),
     gen_server:reply(From, {ok, LastPull}),
-    {noreply, purge_old_messages(State#state{ subscribers = NewSubscribers, 
+    {noreply, purge_old_messages(State#state{ subscribers = NewSubscribers,
                 last_pull = LastPull}), State#state.max_age * 1000};
 
 handle_cast({From, poll, Timestamp}, State) ->
@@ -60,7 +60,7 @@ handle_cast({From, push, Message}, State) ->
                 Now
         end, State#state.last_pull, State#state.subscribers),
     gen_server:reply(From, {ok, Now}),
-    State2 = purge_old_messages(State), 
+    State2 = purge_old_messages(State),
     NewMessages = tiny_pq:insert_value(Now, Message, State2#state.messages),
     {noreply, State2#state{messages = NewMessages, subscribers = [], last_pull = LastPull}, State#state.max_age * 1000};
 
@@ -74,11 +74,13 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-handle_info(timeout, State) ->
+handle_info(timeout, #state{ subscribers = [] } = State) ->
     gen_server:cast(tinymq, {expire, State#state.channel}),
     {stop, normal, State};
+handle_info(timeout, State) ->
+    {noreply, State, State#state.max_age * 1000};
 handle_info({'DOWN', Ref, process, _Pid, _Reason}, State) ->
-    {noreply, State#state{ subscribers = proplists:delete(Ref, State#state.subscribers) }};
+    handle_info(timeout, State#state{ subscribers = proplists:delete(Ref, State#state.subscribers) });
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -98,8 +100,8 @@ purge_old_messages(State) ->
     Duration = seconds_to_micro_seconds(1),
     if
         Now - LastPurge > Duration ->
-            State#state{ 
-                messages = tiny_pq:prune_old(State#state.messages, 
+            State#state{
+                messages = tiny_pq:prune_old(State#state.messages,
                     Now - seconds_to_micro_seconds(State#state.max_age)),
                 last_purge = Now };
         true ->
