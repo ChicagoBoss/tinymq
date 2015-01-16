@@ -10,6 +10,7 @@ script:
   - rebar get-deps
   - rebar compile 
   - rebar eunit -v skip_deps=true
+  - make test
   - mkdir plt
   - ./travis-dialyzer.sh
 notifications:
