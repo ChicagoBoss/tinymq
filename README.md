@@ -1,5 +1,7 @@
 TinyMQ - A diminutive message queue
 --
+[![Build Status](https://travis-ci.org/ChicagoBoss/tinymq.svg)](https://travis-ci.org/ChicagoBoss/tinymq)
+
 
 TinyMQ is a channel-based, in-memory message queue for Erlang. Channels are
 identified by strings (whatever you want) and are automatically created and
