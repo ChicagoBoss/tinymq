@@ -33,7 +33,7 @@ get-deps:
 
 ## dialyzer
 PLT_FILE = ~/tiny_pq.plt
-PLT_APPS ?= kernel stdlib erts compiler
+PLT_APPS ?= kernel stdlib erts compiler deps/*
 DIALYZER_OPTS ?= -Werror_handling -Wrace_conditions -Wunmatched_returns \
 		-Wunderspecs --verbose --fullpath -n
 
