@@ -1,13 +1,17 @@
-{application, tinymq,
-    [
+{application, tinymq, [
     {description, "TinyMQ: a diminutive message queue"},
-    {vsn, "0.8.16"},
+    {vsn, "0.9.0"},
     {registered, [tinymq]},
     {modules, []},
     {applications, [
         kernel,
         stdlib
-            ]},
+    ]},
     {env, [{max_age, 60}]},
-    {mod, {tinymq_app, []}}
-    ]}.
+    {mod, {tinymq_app, []}},
+    {maintainers, ["ChicagoBoss Team"]},
+    {licenses, ["MIT/X11"]},
+    {links, [
+        {"Github", "https://github.com/ChicagoBoss/tinymq"}
+    ]}
+]}.
