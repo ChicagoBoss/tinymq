@@ -1,6 +1,6 @@
 {application, tinymq, [
     {description, "TinyMQ: a diminutive message queue"},
-    {vsn, "0.9.0"},
+    {vsn, "0.9.1"},
     {registered, [tinymq]},
     {modules, []},
     {applications, [
